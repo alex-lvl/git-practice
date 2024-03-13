@@ -17,7 +17,7 @@ A---B---C{HEAD}
 
 `git reset --soft HEAD^` works similarly, but instead of resetting the staging area, the changes are kept intact and all that is needed is to commit the changes. This could be useful whenever some additions need to be made, such as files or features, without resetting the changes that _were staged_ for commit on commit(B) to create commit(C). More simply, this sets commit(B) with changes _after_ the staging state.
 
-`git reset --hard HEAD^` works more destructively and instead overwrites the working directory to the initial state of commit(B). For example, any changes that were prepared to be staged and committed to create commit(C) would completely be overwritten and possibly destroyed. Only use this whenever a commit needs to be completely destroyed and start cleanly from commit(B). More simply, this sets commit(B) to its inital state with no changes _before_ or _after_ the staging state.
+`git reset --hard HEAD^` works more destructively and instead overwrites the working directory to the initial state of commit(B). For example, any changes that were prepared to be staged and committed to create commit(C) would completely be overwritten and possibly destroyed. Only use this whenever a commit needs to be completely destroyed and start cleanly from commit(B). Also, use this when not working with collaborators. More simply, this sets commit(B) to its inital state with no changes _before_ or _after_ the staging state.
 
 #### Scenario
 
@@ -94,6 +94,71 @@ A---B
 
 Finally, let's add a new javascript file and commit it to the `Feature-Branch`. Create a new `app.js` file and add `console.log('I am a javascript file!)`. Stage the change `git add app.js` and commit with `git commit -m "commit (D)"`
 
+This is the tree now:
+
+```
+    Master Branch
+A---B
+     \
+      C---D
+      Feature Branch
+```
+
 #### When can we use this command?
 
 We can use this command whenever we want to fix a mistake in the last commit or add a file that we forgot to add to the staging area. The caveat to this is that this command should only be used when other collaborators are not working on the same branch where these commit changes lie in.
+
+# Git rebase -i
+
+`git rebase -i` is a command which allows us to interactively stop after each commit we’re trying to modify, and then make whatever changes we wish. It can be a powerful tool to use, but can be misused, so be careful. Ensure that collaborators are aware of any attempts at rebasing commits in a shared repository.
+
+Make three new commits in `Feature-Branch`
+Each commit should have a message, commit(E), commit(F), commit(G) and changes with `console.log("new feature progress 1/3")` `console.log("new feature progress 2/3")` `console.log("new feature progress 3/3")`, respectively.
+
+This is the git tree now:
+
+```
+    Master Branch
+A---B
+     \
+      C---D---E---F---G
+      Feature Branch
+```
+
+#### git rebase -i HEAD~3
+
+Rebase allows us to change history ranging from the latest commit to a distant commit. `git rebase -i HEAD~3` allows us to edit the last 3 commits in our branch. This command allows us to perform multiple actions from pick, edit, remove, and more. For this case, we want to squash commits E, F, and G to make our git tree a little cleaner with rebase. Here are a few more ways rebase can change history
+
+- Change our most recent commit
+- Change multiple commit messages
+- Reorder commits
+- Squash commits together
+- Split up commits
+
+Let's try rebase now:
+
+Run `git rebase -i HEAD~3`
+An interactive window should appear with the editor of your choice. You will see the last three commits and a cheatsheet below this list showing the multiple actions you can perform to each commit. The list of commits should look like this:
+
+`pick commit(E)`
+`pick commit(F)`
+`pick commit(G)`
+
+For our purpose, we are using squash to join commits F and G to commit E. Change commit F and G from 'pick' to 'squash'. Like so:
+
+`pick commit(E)`
+`squash commit(F)`
+`squash commit(G)`
+
+Save and exit the window.
+A new window will appear asking to change the commit message. We can keep the commit message as is, which is 'commit(E)'
+
+The git tree should now look like this:
+
+```
+    Master Branch
+A---B
+     \
+      C---D---E(commits E, F, G joined together)
+      Feature Branch
+```
