@@ -8,7 +8,7 @@ I will be using this repo to note down the things I have learned from working wi
 
 ```
 Master Branch
-A---B
+A---B---C{HEAD}
 ```
 
 ## Git reset
@@ -21,7 +21,7 @@ A---B
 
 #### Scenario
 
-Let's assume we commited commit(C) with some changes to an html file along with adding a javascript file in the `Master Branch`. These changes needed to be in a dedicated branch called `Feature-Branch`. For this scenario, we can use `git reset HEAD^` so that we can stash the changes and branch off from commit(B) to the `Feature-Branch`.
+Let's assume we commited commit(C) with some changes to an html file in the `Master Branch`. These changes needed to be in a dedicated branch called `Feature-Branch`. For this scenario, we can use `git reset HEAD^` so that we can stash the changes and branch off from commit(B) to the `Feature-Branch`.
 
 ```
 Master Branch
@@ -40,7 +40,7 @@ A---B
 Now run `git stash` to store the changes
 Then run `git branch Feature-Branch` to create the new branch
 Lets move to the branch using `git checkout Feature-Branch`
-Finally, unload the changes into this new branch that we stashed before using `git stash pop`
+Finally, unload the changes into the new branch that we stashed earlier. `git stash pop`
 Stage the changes with `git add .`
 Commit the changes in the new branch `git commit -m "commit(C)"`
 
@@ -50,6 +50,8 @@ A---B
      \
       C
       Feature Branch
+
+Note: There is an edge case i will provide in another article called git-edgecase-1.md
 ```
 
 ## Git commit --amend
@@ -58,17 +60,39 @@ A---B
 
 #### Scenario
 
-Lets assume we are almost ready to merge our feature-branch with our master branch. We have committed the final change labeled as commit: 'G' in feature-branch. But wait a minute? We forgot to add a file and we have a typo within our file.
+Now that we moved our changes to a new branch `Feature-Branch` we can start working on our feature, but wait, there was a typo in the html file! This fix is no big deal with `git commit --amend`. We can patch this up without it looking like we made this typo in the first place.
+
+Let's do that now but first, for visualization, this is what the git tree looks like currently:
 
 ```
-      Master Branch
-A---B---C---F-------
-         \
-          D---E---G (this commit is missing a file we forgot to add)
-          Feature Branch
+    Master Branch
+A---B
+     \
+      C
+      Feature Branch
 ```
 
-I created an index.html file which has a newly added paragraph saying "hello wolrd". This is a typo that we didnt catch when adding it to our last commit(G).
+Now make sure we're in `Feature-Branch` with `git checkout Feature-Branch`.
+Then, make sure the last commit is commit (C) so we can amend the last commit.
+Go to index.html and change the `<p>hello wolrd<p>` to `<p>hello world<p>`
+Stage the html file with `git add index.html`
+If all looks well, now we can run `git commit --amend`.
+
+An interactive window will appear asking to change the commit message. In this case, we will change the commit message to "commit (C) amended". Now close the window. The changes should now be set and you should see that commit (C) has a new hash, which shows that it was replaced with a new commit.
+
+The current tree should still look similar, but remember that commit (C) is a new commit
+
+```
+    Master Branch
+A---B
+     \
+      C(modified)
+      Feature Branch
+```
+
+`WARNING: MAKE SURE YOU'RE NOT WORKING WITH COLLABORATORS ON THE SAME BRANCH WHEN USING THIS COMMAND`
+
+Finally, let's add a new javascript file and commit it to the `Feature-Branch`. Create a new `app.js` file and add `console.log('I am a javascript file!)`. Stage the change `git add app.js` and commit with `git commit -m "commit (D)"`
 
 #### When can we use this command?
 
