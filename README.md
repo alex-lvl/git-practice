@@ -127,7 +127,7 @@ A---B
 
 #### git rebase -i HEAD~3
 
-Rebase allows us to change history ranging from the latest commit to a distant commit. `git rebase -i HEAD~3` allows us to edit the last 3 commits in our branch. This command allows us to perform multiple actions from pick, edit, remove, and more. For this case, we want to squash commits E, F, and G to make our git tree a little cleaner with rebase. Here are a few more ways rebase can change history
+Rebase allows us to change history ranging from the latest commit to a distant commit. `git rebase -i HEAD~3` allows us to edit the last 3 commits in our branch. This command allows us to perform multiple actions from pick, edit, remove, and more. For this case, we want to use squash to join commits E, F, and G to make our git tree a little cleaner with rebase. Here are a few more ways rebase can change history:
 
 - Change our most recent commit
 - Change multiple commit messages
@@ -149,6 +149,7 @@ For our purpose, we are using squash to join commits F and G to commit E. Change
 `pick commit(E)`
 `squash commit(F)`
 `squash commit(G)`
+Note: We could reorder the commits here if chosen to.
 
 Save and exit the window.
 A new window will appear asking to change the commit message. We can keep the commit message as is, which is 'commit(E)'
@@ -162,3 +163,79 @@ A---B
       C---D---E(commits E, F, G joined together)
       Feature Branch
 ```
+
+We are now ready to merge our changes to `Master`.
+
+# git merge <branch>
+
+`git merge <target branch>` should be run _from_ the `Master Branch` if attempting to merge changes to the main line branch. It is also possible to merge the `Master Branch` _from_ the target branch, in our case, `Feature-Branch`. We will learn more about this type of merge later.
+
+It's important to note that using `git merge` is used to progress our tree _forward in time_. Or in other words, flow in a one directional fashion, but this does not have to be the case sometimes. This non destructive behavior is a benefit of using `git merge` because it is not used to change history.
+
+### 3-way-merge
+
+Merging our `Feature-Branch` to `Master` allows us to implement our changes to the main line branch. If this is a shared repository, the `Master` branch could have new commits from collaborators since branching off of commit B. For example:
+
+```
+    Master Branch
+A---B---E(collaborator's commit)
+     \
+      C---D---F
+      Feature Branch
+
+Note: Hypothetical scenario
+```
+
+This type of merge is called a _3-Way-Merge_. In some cases you might get a merge conflict that must be resolved before merging with a 3-Way-Merge. Once conflicts are resolved, then the git tree will appear as so:
+
+```
+    Master Branch
+A---B(3)---E(1)-G(Merge commit)
+     \         /
+      C---D---F(2)
+      Feature Branch
+
+Note: Hypothetical Scenario
+```
+
+As we discussed earlier, `git merge` moves our `Master Branch` forward in time, in one direction. But, what if we merged _from_ the `Feature-Branch`? This is absolutely possible, but our tree will no longer flow in one direction but rather, two directions. Here's an example:
+
+```
+    Master Branch
+A---B---E--------
+     \           \
+      C---D---F---G(Merge commit)
+      Feature Branch
+
+Note: Hypothetical Scenario
+```
+
+What we see here is still a 3-Way-Merge, but instead of our merge commit(G) being placed on the `Master Branch`, the merge commit is placed on our `Feature-Branch`. This is a useful method to use if we want to maintain and continue our work on `Feature-Branch` with the latest changes on `Master Branch`.
+
+It is important to note that any new commits pushed to the `Master Branch` will create a new merge commit on the `Feature-Branch`. This is the two directional flow we discussed earlier. For example:
+
+```
+    Master Branch
+A---B---E-----------H(Collaborator Commit)
+     \           \   \
+      C---D---F---G---I(New Merge Commit)
+      Feature Branch
+
+Note: Hypothetical Scenario
+```
+
+This workflow should continue until we merge the `Feature-Branch` to `Master`.
+
+```
+    Master Branch
+A---B---E------- ---H---J------L(Merge commit)
+     \           \   \   \    / git merge Feature-Branch
+      C---D---F---G---I---K---
+      Feature Branch  |___|___ New merge commits
+
+Note: Hypothetical Scenario
+```
+
+As seen in the tree above, this can become very messy. However, there can be a better workflow solution that may be a better approach.
+
+(I created a commit E in Master branch, make sure were in feature branch so that we can perform three way merge with git merge main)
