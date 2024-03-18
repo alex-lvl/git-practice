@@ -178,64 +178,168 @@ Merging our `Feature-Branch` to `Master` allows us to implement our changes to t
 
 ```
     Master Branch
-A---B---E(collaborator's commit)
+A---B---F(collaborator's commit)
      \
-      C---D---F
+      C---D---E
       Feature Branch
-
-Note: Hypothetical scenario
 ```
 
 This type of merge is called a _3-Way-Merge_. In some cases you might get a merge conflict that must be resolved before merging with a 3-Way-Merge. Once conflicts are resolved, then the git tree will appear as so:
 
 ```
     Master Branch
-A---B(3)---E(1)-G(Merge commit)
+A---B(3)---F(1)-M(Merge commit)
      \         /
-      C---D---F(2)
+      C---D---E(2)
       Feature Branch
-
-Note: Hypothetical Scenario
 ```
 
 As we discussed earlier, `git merge` moves our `Master Branch` forward in time, in one direction. But, what if we merged _from_ the `Feature-Branch`? This is absolutely possible, but our tree will no longer flow in one direction but rather, two directions. Here's an example:
 
 ```
     Master Branch
-A---B---E--------
+A---B---F--------
      \           \
-      C---D---F---G(Merge commit)
+      C---D---E---M(Merge commit)
       Feature Branch
-
-Note: Hypothetical Scenario
 ```
 
-What we see here is still a 3-Way-Merge, but instead of our merge commit(G) being placed on the `Master Branch`, the merge commit is placed on our `Feature-Branch`. This is a useful method to use if we want to maintain and continue our work on `Feature-Branch` with the latest changes on `Master Branch`.
+What we see here is still a 3-Way-Merge, but instead of our merge commit(M) being placed on the `Master Branch`, the merge commit and HEAD pointer are placed on our `Feature-Branch`. This is a useful method to use if we want to maintain and continue our work on `Feature-Branch` with the latest changes on `Master Branch`.
 
-It is important to note that any new commits pushed to the `Master Branch` will create a new merge commit on the `Feature-Branch`. This is the two directional flow we discussed earlier. For example:
+It is important to note that any new commits pushed to the `Master Branch` will create a new merge commit on the `Feature-Branch`. Or, run `git merge master` from `Feature-Branch` to bring in the latest changes on `Master` This is the two directional flow we discussed earlier. For example:
 
 ```
+M = A merge commit created after running git merge
+
     Master Branch
-A---B---E-----------H(Collaborator Commit)
-     \           \   \
-      C---D---F---G---I(New Merge Commit)
+A---B---F------- -------H(Collaborator Commit)
+     \           \       \
+      C---D---E---M---G---M(New Merge Commit)
       Feature Branch
-
-Note: Hypothetical Scenario
 ```
 
 This workflow should continue until we merge the `Feature-Branch` to `Master`.
 
 ```
     Master Branch
-A---B---E------- ---H---J------L(Merge commit)
-     \           \   \   \    / git merge Feature-Branch
-      C---D---F---G---I---K---
-      Feature Branch  |___|___ New merge commits
-
-Note: Hypothetical Scenario
+A---B---F------- -------H---I------M(Merge commit)
+     \           \       \   \    / git merge Feature-Branch
+      C---D---E---M---G---M---M---
+      Feature Branch      |___|___ New merge commits
 ```
 
-As seen in the tree above, this can become very messy. However, there can be a better workflow solution that may be a better approach.
+As seen in the tree above, this can become very messy. However, there can be a better workflow solution that may be a better approach, which we will discuss later.
 
-(I created a commit E in Master branch, make sure were in feature branch so that we can perform three way merge with git merge main)
+### Fast-Forward Merge
+
+A fast forward merge occurs when a `Master Branch` has no changes while new changes, or commits, are made on another branch. In essence, the other branch, in our case `Feature-Branch`, is "absorbed" into the `Master Branch` without creating a new merge commit.
+
+Let's see an example. Before, a collaborator pushed a change to `Master`, which became commit F. But, now assume a collaborator did not push any new changes in to the `Master Branch`. In this case, commit F did not exist on `Master`. Let's see how that would look:
+
+```
+    Master Branch
+A---B
+     \
+      C---D---E
+      Feature Branch
+```
+
+If work on the `Feature-Branch` has been completed and ready to merge in to `Master`, we can call `git merge Feature-Branch` _from_ the `Master Branch` to initiate a Fast-Forward Merge. This will skip creating a merge commit and move the HEAD pointer to the latest commit on the `Feature-Branch`. Now look at the git tree:
+
+```
+Master Branch
+A---B---C---D---E(HEAD)
+```
+
+Notice, there is no merge commit. The `Feature-Branch` is absorbed into the `Master Branch`. However, we can avoid a fast forward merge by running `git merge Feature-Branch --no-ff`. This is a no fast forward command that can create a merge commit and keep the `Feature-Branch` alive. Using no fast forward will make the tree look like so:
+
+```
+    Master Branch
+A---B-----------M(Merge commit)
+     \         /
+      C---D---E
+      Feature Branch
+```
+
+### Merge and Rebase Workflow
+
+We've covered both rebase and merge. Now, we are going to learn a technique that can enhance developer workflow using rebase and merge together.
+
+Before we dive in, let us discuss a feature of commits. Commits in git are meant to be _inmutable_, or in other words, they can not be changed once they are created.
+
+With this in mind, it is important to recall that rebase can be used to rewrite history. Whenever we are using rebase to "change" a commit, or move a branch to the latest commit on the `Master Branch`, rebase is not changing the commits. Rebase takes _copies_ of the chosen commits to be rebased and reapplies those commits to the branch as _new_ commits. You can spot this by noticing that the commit hashes change when checking the log with `git log`.
+
+Therefore, it is important to understand that there are risks involved when applying this workflow with other collaborators. If you are sharing a branch with other collaborators, ensure that they are aware before using the `rebase` command. Overall, it is best to avoid using this workflow when working on shared branches.
+
+At last, let's practice using this workflow. Recall we merged the `Feature-Branch` to `Master`. Delete the `Feature-Branch` with `git branch -d Feature-Branch`. Let's begin on a fresh branch, but before that, have a look at the git tree so far.
+
+```
+M = Merge commits
+
+    Master Branch
+A---B---F------- -------H---I------M (we are starting from here)
+     \           \       \   \    / git merge Feature-Branch
+      C---D---E---M---G---M---M---
+      Feature Branch
+```
+
+We will begin from the last merge commit on `Master`. Now create a new branch called `workflow-branch` using `git branch workflow-branch`.
+
+Move into the new branch by running `git checkout workflow-branch`
+
+Add a change to the `index.html` with this code:
+
+```
+  <p>hello world</p>
+  <p>from commit F</p>
+  <p>from commit H</p>
+  <p>from commit I</p>
+  <p>workflow-branch commit j</p>
+```
+
+Commit the changes with this message "commit j"
+
+Have a look at the git tree now:
+
+```
+M = Merge commits
+
+    Master Branch
+---M
+    \
+     J
+     workflow-branch
+```
+
+Now lets assume a collaborator made a change that was pushed to `Master` lets mock this change. Go back to `Master` with `git checkout Master`. Now apply this change to the `index.html` file with the code below and commit the change with `git commit -m "commit K"`
+
+```
+  <p>hello world</p>
+  <p>from commit F</p>
+  <p>from commit H</p>
+  <p>from commit I</p>
+  <p>collaborator change Master commit K</p>
+```
+
+Visual reprentation of the tree now:
+
+```
+M = Merge commits
+
+    Master Branch
+---M---K
+    \
+     J
+     workflow-branch
+```
+
+Assume we continue to work on the `workflow-branch`. Run `git checkout workflow-branch`. Now apply another change to the `index.html` file with the code below and commit it by running `git commit -m commit L`:
+
+```
+  <p>hello world</p>
+  <p>from commit F</p>
+  <p>from commit H</p>
+  <p>from commit I</p>
+  <p>workflow-branch commit J</p>
+  <p>workflow-branch commit L</p>
+```
