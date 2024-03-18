@@ -311,7 +311,7 @@ M = Merge commits
      workflow-branch
 ```
 
-Now lets assume a collaborator made a change that was pushed to `Master` lets mock this change. Go back to `Master` with `git checkout Master`. Now apply this change to the `index.html` file with the code below and commit the change with `git commit -m "commit K"`
+Now lets assume a collaborator made a change that was pushed to `Master` lets mock this change. Go back to `Master` with `git checkout master`. Now apply this change to the `index.html` file with the code below and commit the change with `git commit -m "commit K"`
 
 ```
   <p>hello world</p>
@@ -343,3 +343,91 @@ Assume we continue to work on the `workflow-branch`. Run `git checkout workflow-
   <p>workflow-branch commit J</p>
   <p>workflow-branch commit L</p>
 ```
+
+Visual reprentation of the tree now:
+
+```
+M = Merge commits
+
+    Master Branch
+---M---K
+    \
+     J---L
+     workflow-branch
+```
+
+Finally, we see that our workflow branch is behind our `Master` branch so we need to rebase the `workflow-branch` to keep up with the latest changes. Before we rebase, make sure you are in the `workflow-branch`. Then apply the rebase with `git rebase Master`
+
+We will see two merge conflicts. First conflict arises in `commit J`. The editor asks to resolve the conflicts. Since the change was an addition from commit K, we accept both changes. The code should look like this while trying to resolve the `index.html` merge conflict:
+
+```
+  <p>hello world</p>
+  <p>from commit F</p>
+  <p>from commit H</p>
+  <p>from commit I</p>
+  <p>workflow-branch commit J</p>
+  <p>collaborator change Master commit K</p>
+```
+
+Once this is change is made, run `git add index.html` to resolve the conflict. Git should notify that all conflicts are resolved and we may continue the rebase with `git rebase --continue`. The editor will open a window asking to apply a new commit message to `commit J`. Keep the message and exit the window.
+
+The next conflict arises in `commit L`. Because we made a new change in `commit J`(rebase created a new commit as well), git now asks to resolve these conflicts for `commit L`. Since we applied this line to `commit J` from commit `K`:
+
+```
+  <p>collaborator change Master commit K</p>
+```
+
+Git asks if you would like to accept this incoming change, along with the current change in `commit L` which is:
+
+```
+  <p>workflow-branch commit L</p>
+```
+
+Accept both changes and your `index.html` should look like this:
+
+```
+  <p>hello world</p>
+  <p>from commit F</p>
+  <p>from commit H</p>
+  <p>from commit I</p>
+  <p>workflow-branch commit j</p>
+  <p>collaborator change Master commit K</p>
+  <p>workflow-branch commit L</p>
+```
+
+Run `git add index.html` to apply the changes, and then run `git rebase --continue` once all conflicts are resolved. Keep the commit message the same, in this case it should be "commit L", and close the window. We are finally done with the rebase! But wait a minute, notice the new tree:
+
+```
+M = Merge commits
+
+    Master Branch
+---M---K
+        \
+         J---L
+     workflow-branch
+```
+
+The git tree commits now seem out of order, but this commit history is what we are looking for. You may be asking why, and this is because we now have _*fast forward merging*_ on the table!
+
+This is optional, but i am going to add a new commit to the `workflow-branch` as a final commit. This is just for better visualization.
+
+```
+M = Merge commits
+
+    Master Branch
+---M---K
+        \
+         J---L---Final
+         workflow-branch
+```
+
+At last, let's try this powerful technique. First, move over to `Master` using `git checkout master`. Then, run `git merge workflow-branch`. If all is well, the commit history should look linear:
+
+```
+M = Merge commits
+
+    Master Branch
+---M---K---J---L---Final
+```
+
+We have now completed a rebase with fast forward merge. Great Work! Applying this workflow will keep your project's commit history linear and less messy than using merge alone. But, this isn't magic! Remember the risks of using this technique with shared repositories. Good Luck!
